@@ -1,9 +1,10 @@
 :: github/0xBlitzmachine
-:: Use this Script AFTER you updated your Server using SteamCMD
+::              !!       Use this Script AFTER you updated your Server using SteamCMD       !!
 @echo off
 echo Starting Batch Script v.0.1 - Github/0xBlitzmachine
 
 :: Define paths and filenames
+::                            !!   Only define DOWNLOAD_PATH & RUST_SERVER_PATH    !!
 set "OXIDE_RUST_GITHUB_PATH=https://umod.org/games/rust/download?tag=public"
 set "DOWNLOAD_FILENAME=Oxide.Rust.zip"
 set "DOWNLOAD_PATH=C:\Users\blitz\Downloads\"

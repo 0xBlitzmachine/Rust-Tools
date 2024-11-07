@@ -9,5 +9,5 @@ set "APP_ID=258550"
 %STEAMCMD_PATH% ^
 +force_install_dir %RUST_SERVER_PATH% ^
 +login anonymous ^
-+app_update 258550 ^
++app_update %APP_ID% ^
 +quit

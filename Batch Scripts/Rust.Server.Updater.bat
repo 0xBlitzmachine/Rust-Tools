@@ -11,3 +11,9 @@ set "APP_ID=258550"
 +login anonymous ^
 +app_update %APP_ID% ^
 +quit
+
+echo .
+echo .
+echo Your Rust server files are located @ %RUST_SERVER_PATH%
+pause
+exit /b 1

@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
-
+using System;
+using Oxide.Core.Plugins;
 
 namespace Oxide.Plugins;
 
@@ -8,7 +9,7 @@ namespace Oxide.Plugins;
 public class DemoPluginConfiguration : RustPlugin
 {
     #region Variables
-    private Configuration? _configuration;
+    private Configuration _configuration;
     #endregion
 
     #region Configuration
@@ -26,24 +27,23 @@ public class DemoPluginConfiguration : RustPlugin
         [JsonProperty(propertyName: "Steam64 ID")]
         public ulong Steam64ID { get; set; }
     }
-
-    private void Init()
+    
+    protected override void SaveConfig() => Config.WriteObject(_configuration, true);
+    protected override void LoadDefaultConfig() => _configuration = new Configuration();
+    protected override void LoadConfig()
     {
+        base.LoadConfig();
         try
         {
             _configuration = Config.ReadObject<Configuration>();
         }
-        catch
+        catch (Exception e)
         {
-            PrintError("Failed to load configuration file! Invalid JSON Format");
-            PrintWarning("Using default configuration.");
+            PrintError($"The configuration file is invalid:\n\n\n {e.Message}");
+            PrintWarning("Using default values. Fix your configuration!");
             LoadDefaultConfig();
         }
     }
-
-    protected override void SaveConfig() => Config.WriteObject(_configuration, true);
-    protected override void LoadDefaultConfig() => _configuration = new Configuration();
-
 
     #endregion
 
@@ -51,7 +51,7 @@ public class DemoPluginConfiguration : RustPlugin
     [ChatCommand("test")]
     private void CmdPlayground(BasePlayer player, string command, string[] args)
     {
-        SendReply(player, $"{_configuration!.ChatSettings.Steam64ID}");
+        SendReply(player, $"{_configuration.ChatSettings.Steam64ID}");
     }
     #endregion
 }

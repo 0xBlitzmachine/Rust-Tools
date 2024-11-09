@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 using System;
-using Oxide.Core.Plugins;
+using System.Text;
+
 
 namespace Oxide.Plugins;
 
@@ -9,33 +11,74 @@ namespace Oxide.Plugins;
 public class DemoPluginConfiguration : RustPlugin
 {
     #region Variables
-    private Configuration _configuration;
+    private PluginConfig _pluginConfig;
     #endregion
 
     #region Configuration
-    private class Configuration
+
+    #region Plugin Configuration Template
+    private class PluginConfig
     {
         [JsonProperty(propertyName: "Chat Settings")]
-        public ChatSettings ChatSettings = new()
+        public ChatSetting Chat = new()
         {
-            Steam64ID = 76561199446355310
+            Steam64Id = 76561199446355310
+        };
+        
+        [JsonProperty(propertyName: "Player Settings")]
+        public PlayerSetting Player = new()
+        {
+            NeedsAdminPermission = false,
+            PlayerInventory = new PlayerInventorySetting()
+            {
+                InventoryContainer = new Dictionary<string, int>()
+                {
+                    { "Ak", 5 },
+                    { "Sulfur", 2000 }
+                },
+                InventoryBeltContainer = new List<string>() { "Sulfur", "That" },
+                InventoryWearContainer = new List<string>() { "Wolf Hat", "Jacket" }
+            }
         };
     }
+    
 
-    private class ChatSettings
+    private class ChatSetting
     {
         [JsonProperty(propertyName: "Steam64 ID")]
-        public ulong Steam64ID { get; set; }
+        public ulong Steam64Id { get; set; }
     }
+
+    private class PlayerSetting
+    {
+        [JsonProperty(propertyName: "Needs Admin Permission?")]
+        public bool NeedsAdminPermission { get; set; }
+        
+        [JsonProperty(propertyName: "Player Inventory Settings")] 
+        public PlayerInventorySetting PlayerInventory { get; set; }
+    }
+
+    private class PlayerInventorySetting
+    {
+        [JsonProperty(propertyName: "Inventory Container")]
+        public Dictionary<string, int> InventoryContainer { get; set; }
+        
+        [JsonProperty(propertyName: "Inventory Wear Container")]
+        public List<string> InventoryWearContainer { get; set; }
+        
+        [JsonProperty(propertyName: "Inventory Belt Container")]
+        public List<string> InventoryBeltContainer { get; set; }
+    }
+    #endregion
     
-    protected override void SaveConfig() => Config.WriteObject(_configuration, true);
-    protected override void LoadDefaultConfig() => _configuration = new Configuration();
+    protected override void SaveConfig() => Config.WriteObject(_pluginConfig, true);
+    protected override void LoadDefaultConfig() => _pluginConfig = new PluginConfig();
     protected override void LoadConfig()
     {
         base.LoadConfig();
         try
         {
-            _configuration = Config.ReadObject<Configuration>();
+            _pluginConfig = Config.ReadObject<PluginConfig>();
         }
         catch (Exception e)
         {
@@ -51,7 +94,14 @@ public class DemoPluginConfiguration : RustPlugin
     [ChatCommand("test")]
     private void CmdPlayground(BasePlayer player, string command, string[] args)
     {
-        SendReply(player, $"{_configuration.ChatSettings.Steam64ID}");
+        var builder = new StringBuilder("Your command executed!");
+
+        foreach (KeyValuePair<string, int> pair in _pluginConfig.Player.PlayerInventory.InventoryContainer)
+        {
+            builder.Append(pair.Key + " - Amount: " + pair.Value.ToString());
+        }
+        
+        player.ChatMessage(builder.ToString());
     }
     #endregion
 }

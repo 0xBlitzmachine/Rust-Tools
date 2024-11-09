@@ -94,11 +94,11 @@ public class DemoPluginConfiguration : RustPlugin
     [ChatCommand("test")]
     private void CmdPlayground(BasePlayer player, string command, string[] args)
     {
-        var builder = new StringBuilder("Your command executed!");
+        var builder = new StringBuilder("Your command executed! \n\n");
 
         foreach (KeyValuePair<string, int> pair in _pluginConfig.Player.PlayerInventory.InventoryContainer)
         {
-            builder.Append(pair.Key + " - Amount: " + pair.Value.ToString());
+            builder.Append(pair.Key + " - Amount: " + pair.Value + "\n");
         }
         
         player.ChatMessage(builder.ToString());

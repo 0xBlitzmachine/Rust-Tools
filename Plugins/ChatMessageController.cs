@@ -121,10 +121,8 @@ public class ChatMessageController : RustPlugin
 
     private void SendMessageToServer(string message)
     {
-        if (BasePlayer.activePlayerList.Count > 0)
-        {
+        if (BasePlayer.activePlayerList.Count < 1) return;
             Server.Broadcast(FormatMessage(message), config.Chat.SteamID);
-        }
     }
     #endregion
 

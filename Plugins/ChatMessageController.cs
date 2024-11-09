@@ -13,15 +13,12 @@ namespace Oxide.Plugins;
 public class ChatMessageController : RustPlugin
 {
     #region Variables
-
     private PluginConfig config;
-
     #endregion
 
     #region Configuration
 
     #region Plugin Configuration Template
-
     private class PluginConfig
     {
         [JsonProperty(PropertyName = "Settings")]
@@ -48,22 +45,24 @@ public class ChatMessageController : RustPlugin
         [JsonProperty(PropertyName = "Prefix")]
         public string Prefix { get; set; }
 
-        [JsonProperty(PropertyName = "Color")] public string Color { get; set; }
+        [JsonProperty(PropertyName = "Color")]
+        public string Color { get; set; }
 
-        [JsonProperty(PropertyName = "Size")] public int Size { get; set; }
+        [JsonProperty(PropertyName = "Size")]
+        public int Size { get; set; }
     }
 
     private class ChatMessageSettings
     {
-        [JsonProperty(PropertyName = "Color")] public string Color { get; set; }
+        [JsonProperty(PropertyName = "Color")]
+        public string Color { get; set; }
 
-        [JsonProperty(PropertyName = "Size")] public int Size { get; set; }
+        [JsonProperty(PropertyName = "Size")]
+        public int Size { get; set; }
     }
-
     #endregion
 
     protected override void SaveConfig() => Config.WriteObject(config, true);
-
     protected override void LoadDefaultConfig()
     {
         config = new PluginConfig
@@ -106,11 +105,9 @@ public class ChatMessageController : RustPlugin
             LoadDefaultConfig();
         }
     }
-
     #endregion
 
     #region Developer Hooks
-
     private void SendMessageToPlayer(BasePlayer player, string message)
     {
         if (player == null)
@@ -129,11 +126,9 @@ public class ChatMessageController : RustPlugin
             Server.Broadcast(FormatMessage(message), config.Chat.SteamID);
         }
     }
-
     #endregion
 
     #region Helper
-
     private string FormatMessage(string message)
     {
         return config.Chat.Format
@@ -156,6 +151,5 @@ public class ChatMessageController : RustPlugin
             .Replace("{color}", config.ChatMessage.Color)
             .Replace("{message}", message);
     }
-
     #endregion
 }

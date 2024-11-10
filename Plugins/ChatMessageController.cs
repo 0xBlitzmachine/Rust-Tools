@@ -4,12 +4,13 @@ using System;
 using System.Text;
 using ConVar;
 using UnityEngine;
+using Console = ConVar.Console;
 
 
 namespace Oxide.Plugins;
 
-[Info("ChatMessageController", "Blitzmachine", "0.0.1")]
-[Description("Sync your server/player chat messages in other plugins")]
+[Info("Chat Message Controller", "Blitzmachine", "1.0.0")]
+[Description("Chat Message Controller library to generate custom message, prefix and chat icon.")]
 public class ChatMessageController : RustPlugin
 {
     #region Variables
@@ -29,6 +30,9 @@ public class ChatMessageController : RustPlugin
 
         [JsonProperty(PropertyName = "Chat Message Settings")]
         public ChatMessageSettings ChatMessage { get; set; }
+
+        [JsonProperty(PropertyName = "Server Message Settings")]
+        public ServerMessageSettings ServerMessage { get; set; }
     }
 
     private class ChatSettings
@@ -60,6 +64,15 @@ public class ChatMessageController : RustPlugin
         [JsonProperty(PropertyName = "Size")]
         public int Size { get; set; }
     }
+
+    private class ServerMessageSettings
+    {
+        [JsonProperty(PropertyName = "Intercept Server Messages")]
+        public bool Intercept { get; set; }
+
+        [JsonProperty(PropertyName = "Stop Intercept Server Messages containing")]
+        public HashSet<string> StopInterceptCollection { get; set; }
+    }
     #endregion
 
     protected override void SaveConfig() => Config.WriteObject(config, true);
@@ -82,6 +95,14 @@ public class ChatMessageController : RustPlugin
             {
                 Color = "#fff",
                 Size = 13
+            },
+            ServerMessage = new ServerMessageSettings
+            {
+                Intercept = true,
+                StopInterceptCollection = new HashSet<string>
+                {
+                    "gave"
+                }
             }
         };
     }
@@ -107,22 +128,39 @@ public class ChatMessageController : RustPlugin
     }
     #endregion
 
+    #region Oxide Hooks
+    private object OnServerMessage(string serverMessage, string playerName)
+    {
+        if (config.ServerMessage.Intercept)
+        {
+            foreach (var word in config.ServerMessage.StopInterceptCollection)
+            {
+                if (serverMessage.Contains(word) && playerName.Contains("SERVER"))
+                    return false;
+            }
+            SendMessageToServer(serverMessage);
+            return true;
+        }
+        return null;
+    }
+    #endregion
+
     #region Developer Hooks
-    private void SendMessageToPlayer(BasePlayer player, string message)
+    private bool SendMessageToPlayer(BasePlayer player, string message)
     {
         if (player == null)
-        {
-            Puts("Could not send chat message to player. Player = null.");
-            return;
-        }
+            return false;
 
         Player.Message(player, FormatMessage(message), config.Chat.SteamID);
+        return true;
     }
 
     private void SendMessageToServer(string message)
     {
-        if (BasePlayer.activePlayerList.Count < 1) return;
-            Server.Broadcast(FormatMessage(message), config.Chat.SteamID);
+        if (BasePlayer.activePlayerList.Count < 1)
+            return;
+
+        Server.Broadcast(FormatMessage(message), config.Chat.SteamID);
     }
     #endregion
 

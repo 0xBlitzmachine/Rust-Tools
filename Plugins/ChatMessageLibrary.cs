@@ -2,21 +2,22 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using System;
 using System.Text;
+using ConVar;
 
 namespace Oxide.Plugins;
 
-[Info("Chat Message Controller", "Blitzmachine", "1.0.0")]
-[Description("Chat Message Controller library to generate custom message, prefix and chat icon.")]
-public class ChatMessageController : RustPlugin
+[Info("Chat Message Library", "Blitzmachine", "1.0.0")]
+[Description("A library to handle chat messages. Customize a constant prefix and message style and use it anywhere else")]
+public class ChatMessageLibrary : RustPlugin
 {
     #region Variables
-    private PluginConfig config;
+    private ConfigData configData;
     #endregion
 
     #region Configuration
 
     #region Plugin Configuration Template
-    private class PluginConfig
+    private class ConfigData
     {
         [JsonProperty(PropertyName = "Settings")]
         public ChatSettings Chat { get; set; }
@@ -38,6 +39,9 @@ public class ChatMessageController : RustPlugin
 
         [JsonProperty(PropertyName = "Chat Format")]
         public string Format { get; set; }
+
+        [JsonProperty(PropertyName = "Break message into new line after prefix")]
+        public bool BreaklineAfterPrefix { get; set; }
     }
 
     private class ChatPrefixSettings
@@ -71,19 +75,20 @@ public class ChatMessageController : RustPlugin
     }
     #endregion
 
-    protected override void SaveConfig() => Config.WriteObject(config, true);
+    protected override void SaveConfig() => Config.WriteObject(configData, true);
     protected override void LoadDefaultConfig()
     {
-        config = new PluginConfig
+        configData = new ConfigData
         {
             Chat = new ChatSettings
             {
                 SteamID = 76561199446355310,
-                Format = "{prefix} » {message}"
+                Format = "{prefix} {message}",
+                BreaklineAfterPrefix = true
             },
             ChatPrefix = new ChatPrefixSettings
             {
-                Prefix = "Paradox Gaming",
+                Prefix = "Paradox Gaming »",
                 Color = "#d42f3f",
                 Size = 15
             },
@@ -108,7 +113,7 @@ public class ChatMessageController : RustPlugin
         base.LoadConfig();
         try
         {
-            config = Config.ReadObject<PluginConfig>();
+            configData = Config.ReadObject<ConfigData>();
             PrintWarning("Configuration loaded!");
         }
         catch (Exception ex)
@@ -125,16 +130,16 @@ public class ChatMessageController : RustPlugin
     #endregion
 
     #region Oxide Hooks
-    private object OnServerMessage(string serverMessage, string playerName)
+    private object? OnServerMessage(string serverMessage, string playerName)
     {
-        if (config.ServerMessage.Intercept)
+        if (configData.ServerMessage.Intercept)
         {
-            foreach (var word in config.ServerMessage.StopInterceptCollection)
+            foreach (var word in configData.ServerMessage.StopInterceptCollection)
             {
                 if (serverMessage.Contains(word) && playerName.Contains("SERVER"))
                     return false;
             }
-            SendMessageToServer(serverMessage);
+            API_SendMessageToServer(serverMessage);
             return true;
         }
         return null;
@@ -142,45 +147,57 @@ public class ChatMessageController : RustPlugin
     #endregion
 
     #region Developer Hooks
-    private bool SendMessageToPlayer(BasePlayer player, string message)
+    /// <summary>
+    /// API function that will send customized message to a specific user.
+    /// </summary>
+    /// <param name="player">The player you want to target.</param>
+    /// <param name="message">The message the player will receive.</param>
+    /// <returns></returns>
+    private bool API_SendMessageToPlayer(BasePlayer player, string message)
     {
         if (player == null)
             return false;
 
-        Player.Message(player, FormatMessage(message), config.Chat.SteamID);
+        Player.Message(player, FormatMessage(message), configData.Chat.SteamID);
         return true;
     }
 
-    private void SendMessageToServer(string message)
+    /// <summary>
+    /// API function that will broadcast your customized message to the server using the set configuration.
+    /// </summary>
+    /// <param name="message">The message you want to send to the server.</param>
+    private void API_SendMessageToServer(string message)
     {
         if (BasePlayer.activePlayerList.Count < 1)
             return;
 
-        Server.Broadcast(FormatMessage(message), config.Chat.SteamID);
+        Server.Broadcast(FormatMessage(message), configData.Chat.SteamID);
     }
     #endregion
 
     #region Helper
     private string FormatMessage(string message)
     {
-        return config.Chat.Format
-            .Replace("{prefix}", GetStyledPrefix())
+        string prefix = configData.Chat.BreaklineAfterPrefix ? "\n" + GetStyledPrefix() : GetStyledPrefix();
+
+        return configData.Chat.Format
+            .Replace("{prefix}", prefix)
             .Replace("{message}", GetStyledMessage(message));
     }
 
     private string GetStyledPrefix()
     {
         return "<size={size}><color={color}>{prefix}</color></size>"
-            .Replace("{size}", config.ChatPrefix.Size.ToString())
-            .Replace("{color}", config.ChatPrefix.Color)
-            .Replace("{prefix}", config.ChatPrefix.Prefix);
+            .Replace("{size}", configData.ChatPrefix.Size.ToString())
+            .Replace("{color}", configData.ChatPrefix.Color)
+            .Replace("{prefix}", configData.ChatPrefix.Prefix);
     }
 
     private string GetStyledMessage(string message)
     {
         return "<size={size}><color={color}>{message}</color></size>"
-            .Replace("{size}", config.ChatMessage.Size.ToString())
-            .Replace("{color}", config.ChatMessage.Color)
+            .Replace("{size}", configData.ChatMessage.Size.ToString())
+            .Replace("{color}", configData.ChatMessage.Color)
             .Replace("{message}", message);
     }
     #endregion

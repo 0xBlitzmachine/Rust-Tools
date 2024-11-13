@@ -152,7 +152,7 @@ public class ChatMessageLibrary : RustPlugin
     /// </summary>
     /// <param name="player">The player you want to target.</param>
     /// <param name="message">The message the player will receive.</param>
-    /// <returns></returns>
+    /// <returns>Returns true when player was not null. Otherwise false</returns>
     private bool API_SendMessageToPlayer(BasePlayer player, string message)
     {
         if (player == null)

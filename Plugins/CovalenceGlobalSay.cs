@@ -7,6 +7,7 @@ using Oxide.Core;
 using UnityEngine;
 using Oxide.Core.Libraries.Covalence;
 using Oxide.Core.Plugins;
+using HarmonyLib;
 
 namespace Oxide.Plugins;
 
@@ -17,7 +18,7 @@ namespace Oxide.Plugins;
 
 // Use CovalencePlugin since this plugin logic can be translated universal
 // Both RustPlugin and CovalencePlugin are inheritor of CSharpPlugin and Covalence/CSharp Plugin are enough for this.
-public class CovalenceGlobalSay : CovalencePlugin
+public class CovalenceGlobalSay : RustPlugin
 {
     #region Setup
     // Ignore all custom set steam ids for avatar usage in messages when collect_vood's CustomIcon plugin is loaded.
@@ -34,7 +35,7 @@ public class CovalenceGlobalSay : CovalencePlugin
     [Command("ping")]
     private void CovalenceCommand(IPlayer player, string command, string[] args)
     {
-        player.Reply(LocaleMessage("CustomGlobalSay", player.Name));
+        player.Reply(GetLocalizedMessage("CustomGlobalSay", args: [player.Name]));
     }
     #endregion
 
@@ -57,7 +58,6 @@ public class CovalenceGlobalSay : CovalencePlugin
             return;
 
         CustomIcon = plugin is { Name: "CustomIcon", Author: "collect_vood" } && plugin.Version == new VersionNumber(1, 0, 4) ? plugin : null;
-        Puts("Found CustomIcon by collect_vood ..");
 
         if (CustomIcon != null)
             Puts($"{plugin.Name} version {plugin.Version} author: {plugin.Author}" + "loaded!");
@@ -73,10 +73,7 @@ public class CovalenceGlobalSay : CovalencePlugin
     {
         ["CustomGlobalSay"] = "Replying with Pong - {0}",
     };
-
-    private string LocaleMessage(string key, params object[] args) =>
-        string.Format(lang.GetMessage(key, this), args);
-
-
+    private string GetLocalizedMessage(string key, string? userId = null, params object[] args) =>
+        string.Format(lang.GetMessage(key, this, userId), args);
     #endregion
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System;
 using System.Text;
+using UnityEngine;
 
 
 namespace Oxide.Plugins;
@@ -10,98 +11,103 @@ namespace Oxide.Plugins;
 [Description("Blueprint/Demo of an Oxide Configuration")]
 public class DemoPluginConfiguration : RustPlugin
 {
-    #region Variables
-    private PluginConfig _pluginConfig;
+    #region Setup
+    private PluginConfiguration pluginConfig;
     #endregion
 
     #region Configuration
 
     #region Plugin Configuration Template
-    private class PluginConfig
+    private class PluginConfiguration
     {
-        [JsonProperty(propertyName: "Chat Settings")]
-        public ChatSetting Chat = new()
+        [JsonProperty(propertyName: "X Related Settings")]
+        public SomeXRelatedSettings XSettings { get; set; }
+
+        [JsonProperty(propertyName: "Y Related Settings")]
+        public SomeYRelatedSettings YSettings { get; set; }
+
+        public static PluginConfiguration GetDefaultConfiguration() => new PluginConfiguration
         {
-            Steam64Id = 76561199446355310
-        };
-        
-        [JsonProperty(propertyName: "Player Settings")]
-        public PlayerSetting Player = new()
-        {
-            NeedsAdminPermission = false,
-            PlayerInventory = new PlayerInventorySetting()
+            XSettings = new SomeXRelatedSettings
             {
-                InventoryContainer = new Dictionary<string, int>()
+                Steam64Id = 0U
+            },
+            YSettings = new SomeYRelatedSettings
+            {
+                NeedsAdminPermission = false,
+                PlayerInventory = new SomeZRelatedSettings
                 {
-                    { "Ak", 5 },
-                    { "Sulfur", 2000 }
-                },
-                InventoryBeltContainer = new List<string>() { "Sulfur", "That" },
-                InventoryWearContainer = new List<string>() { "Wolf Hat", "Jacket" }
+                    InventoryContainer = { },
+                    InventoryBeltContainer = { },
+                    InventoryWearContainer = { }
+                }
             }
         };
     }
-    
 
-    private class ChatSetting
+
+    private class SomeXRelatedSettings
     {
         [JsonProperty(propertyName: "Steam64 ID")]
         public ulong Steam64Id { get; set; }
     }
 
-    private class PlayerSetting
+    private class SomeYRelatedSettings
     {
-        [JsonProperty(propertyName: "Needs Admin Permission?")]
+        [JsonProperty(propertyName: "Needs Admin Permission")]
         public bool NeedsAdminPermission { get; set; }
-        
-        [JsonProperty(propertyName: "Player Inventory Settings")] 
-        public PlayerInventorySetting PlayerInventory { get; set; }
+
+        [JsonProperty(propertyName: "Player Inventory Settings")]
+        public SomeZRelatedSettings PlayerInventory { get; set; }
     }
 
-    private class PlayerInventorySetting
+    private class SomeZRelatedSettings
     {
         [JsonProperty(propertyName: "Inventory Container")]
         public Dictionary<string, int> InventoryContainer { get; set; }
-        
+
         [JsonProperty(propertyName: "Inventory Wear Container")]
         public List<string> InventoryWearContainer { get; set; }
-        
+
         [JsonProperty(propertyName: "Inventory Belt Container")]
         public List<string> InventoryBeltContainer { get; set; }
     }
     #endregion
-    
-    protected override void SaveConfig() => Config.WriteObject(_pluginConfig, true);
-    protected override void LoadDefaultConfig() => _pluginConfig = new PluginConfig();
+
+    protected override void SaveConfig() => Config.WriteObject(pluginConfig, true);
+    protected override void LoadDefaultConfig() => pluginConfig = PluginConfiguration.GetDefaultConfiguration();
     protected override void LoadConfig()
     {
         base.LoadConfig();
         try
         {
-            _pluginConfig = Config.ReadObject<PluginConfig>();
+            pluginConfig = Config.ReadObject<PluginConfiguration>();
         }
         catch (Exception e)
         {
-            PrintError($"The configuration file is invalid:\n\n\n {e.Message}");
-            PrintWarning("Using default values. Fix your configuration!");
+            StringBuilder builder = new StringBuilder("Configuration file is corrupt - (Invalid JSON Format?)");
+            builder.AppendLine(e.Message);
+
+            PrintError(builder.ToString());
+            PrintWarning("Configuration Object is using default values.");
             LoadDefaultConfig();
         }
     }
 
     #endregion
-
     #region Chat Commands
     [ChatCommand("test")]
     private void CmdPlayground(BasePlayer player, string command, string[] args)
     {
         var builder = new StringBuilder("Your command executed! \n\n");
 
-        foreach (KeyValuePair<string, int> pair in _pluginConfig.Player.PlayerInventory.InventoryContainer)
+        foreach (KeyValuePair<string, int> pair in pluginConfig.YSettings.PlayerInventory.InventoryContainer)
         {
-            builder.Append(pair.Key + " - Amount: " + pair.Value + "\n");
+            builder.AppendLine(pair.Key + " - Amount: " + pair.Value + "\n");
         }
-        
+
         player.ChatMessage(builder.ToString());
     }
+
     #endregion
 }

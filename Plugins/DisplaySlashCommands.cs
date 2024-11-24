@@ -7,19 +7,24 @@ using Oxide.Game.Rust;
 using Oxide.Game.Rust.Cui;
 using UnityEngine;
 using UnityEngine.UI;
+using System.ComponentModel;
+using Facepunch.Models.Database;
 
 namespace Oxide.Plugins;
 
 [Info("Display Slash Commands", "Blitzmachine", "1.0.0")]
 [Description("/")]
 
-public class DisplaySlashCommands : CovalencePlugin
+public class DisplaySlashCommands : RustPlugin
 {
     #region Plugin Setup
 
     private PluginConfiguration PluginConfig;
-    private CuiElementContainer ElementContainer = new CuiElementContainer();
-    private string Layer = string.Empty;
+    private CuiElementContainer ElementContainer;
+
+    private const string MAIN_LAYER_IDENTIFIER = "displayslashcommands.ui.main";
+    private const string HEADER_LAYER_IDENTIFIER = "displayslashcommands.ui.header";
+    private const string BODY_LAYER_IDENTIFIER = "displayslashcommands.ui.body";
 
     private const string PERMISSION_NAME = "displayslashcommands.use";
 
@@ -153,124 +158,128 @@ public class DisplaySlashCommands : CovalencePlugin
 
     #region Oxide Hooks
 
+    private void Unload()
+    {
+        foreach (BasePlayer basePlayer in BasePlayer.activePlayerList)
+        {
+            CuiHelper.DestroyUi(basePlayer, HEADER_LAYER_IDENTIFIER);
+        }
+    }
+
     private void Init()
     {
         if (!permission.PermissionExists(PERMISSION_NAME))
             permission.RegisterPermission(PERMISSION_NAME, this);
 
-        CreateElementContainer(ref ElementContainer, ref Layer);
+        ElementContainer = InitializeElementContainer();
+        GenerateUi(ref ElementContainer);
+
+        PrintWarning(ElementContainer == null
+        ? "ElementContainer is null!"
+        : "ElementContainer successfully initialized!");
+
+        PrintWarning(ElementContainer.Count == 0
+        ? "ElementContainer is empty!"
+        : $"ElementContainer has {ElementContainer.Count} elements");
+
     }
 
     #endregion
 
     #region Internal Commands
 
-    [Command("s"), Permission(PERMISSION_NAME)]
-    private void ShowSlashCommand(IPlayer player, string command, string[] args)
+    [ChatCommand("s"), Permission(PERMISSION_NAME)]
+    private void ShowSlashCommand(BasePlayer player, string command, string[] args)
     {
-        CuiHelper.AddUi(player.Object as BasePlayer, ElementContainer);
+        if (player == null)
+        {
+            PrintWarning("ShowUI: Player was null!");
+            return;
+        }
+
+        if (ElementContainer == null)
+        {
+            PrintWarning("ShowUI: ElementContainer is null!");
+            return;
+        }
+
+        CuiHelper.AddUi(player, ElementContainer);
     }
 
-    [Command("d"), Permission(PERMISSION_NAME)]
-    private void DestroySlashCommand(IPlayer player, string command, string[] args)
-    {
-        CuiHelper.DestroyUi(player.Object as BasePlayer, Layer);
-    }
-
-    [Command("db"), Permission(PERMISSION_NAME)]
-    private void DestroyBSlashCommand(IPlayer player, string command, string[] args)
-    {
-        CuiHelper.DestroyUi(player.Object as BasePlayer, "button");
-    }
+    [ChatCommand("d"), Permission(PERMISSION_NAME)]
+    private void DestroySlashCommand(BasePlayer player, string command, string[] args) => CuiHelper.DestroyUi(player, MAIN_LAYER_IDENTIFIER);
 
     #endregion
 
+
     #region Internal Cui Helpers
 
-    private static void CreateElementContainer(ref CuiElementContainer container, ref string layer)
+    // RawImageSprite: "assets/content/textures/generic/fulltransparent.tga"
+    private static CuiElementContainer InitializeElementContainer() => new()
     {
-        layer = CuiHelper.GetGuid();
-
-        CuiElement mainContainer = new CuiElement
         {
-            Name = layer,
-            Parent = "Overlay",
-            Components =
+            new CuiPanel
             {
-                new CuiRectTransformComponent
+                CursorEnabled = true,
+                FadeOut = 2f,
+                Image =
                 {
-                    AnchorMin = "0.4 0.4",
-                    AnchorMax = "0.6 0.6"
+                    Color = "0 0 0 0",
+                    FadeIn = 2f,
                 },
-                new CuiImageComponent
-                {
-                    Color = "0.1 0.1 0.1 0.8"
-                }
-            }
-        };
-        container.Add(mainContainer);
+                RectTransform = { AnchorMin = "0.4 0.4", AnchorMax = "0.6 0.6" }
+            },
+            "Overlay", MAIN_LAYER_IDENTIFIER
+        }
+    };
 
-        CuiElement textElement = new CuiElement()
+    private static void GenerateUi(ref CuiElementContainer container)
+    {
+        var header = new CuiPanel
         {
-            Parent = layer,
-            FadeOut = 5f,
-            Components =
+            FadeOut = 2f,
+            Image =
             {
-                  new CuiTextComponent
-                  {
-                      Text = layer,
-                      FontSize = 16,
-                      Align = TextAnchor.MiddleCenter
-                  },
-                  new CuiOutlineComponent
-                  {
-                      Color = "0 0 1 1",
-                      Distance = "0.1 0.1",
-                      UseGraphicAlpha = true
-                  }
-            }
+                Color = "1 5 5 1",
+                FadeIn = 2f,
+            },
+            RectTransform = { AnchorMin = "0.0 0.0", AnchorMax = "0.3 1.0" }
         };
-        container.Add(textElement);
 
-        CuiElement buttonElement = new CuiElement()
+        var body = new CuiPanel
         {
-            Name = "button",
-            Parent = layer,
-            Components =
+            FadeOut = 2f,
+            Image =
             {
-                new CuiButtonComponent
-                {
-                    Command = "d",
-                    Color = "1 0 0 1"
-                },
-                new CuiRectTransformComponent
-                {
-                    AnchorMin = "0.2 0.7",
-                    AnchorMax = "0.8 0.9"
-                }
-            }
+                Color = "255 255 255 1",
+                FadeIn = 2f,
+            },
+            RectTransform = { AnchorMin = "0.3 0.0", AnchorMax = "1.0 1.0" }
         };
-        container.Add(buttonElement);
 
-        CuiElement buttonTextElement = new CuiElement()
+        var closeButton = new CuiButton
         {
-            Parent = "button",
-            Components =
+            FadeOut = 2f,
+            Button =
             {
-                new CuiTextComponent()
-                {
-                    Text = "My button Text",
-                    Color = "0 1 0 1",
-                    Align = TextAnchor.MiddleCenter
-                },
-                new CuiRectTransformComponent()
-                {
-                    AnchorMin = "0.2 0.2",
-                    AnchorMax = "0.8 0.8"
-                }
-            }
+                Color = "1 0 0 1",
+                Close = MAIN_LAYER_IDENTIFIER,
+                ImageType = Image.Type.Filled,
+            },
+            Text =
+            {
+                Color = "0 0 0 1",
+                Text = "X",
+                FontSize = 10,
+                FadeIn = 2f,
+                Align = TextAnchor.MiddleCenter,
+            },
+            RectTransform = { AnchorMin = "0.0 0.9", AnchorMax = "0.05 1.0" }
         };
-        container.Add(buttonTextElement);
-        #endregion
+
+        container.Add(header, MAIN_LAYER_IDENTIFIER);
+        container.Add(body, MAIN_LAYER_IDENTIFIER);
+        container.Add(closeButton, MAIN_LAYER_IDENTIFIER);
     }
+    #endregion
 }

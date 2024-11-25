@@ -15,12 +15,12 @@ namespace Oxide.Plugins;
 [Info("Display Slash Commands", "Blitzmachine", "1.0.0")]
 [Description("/")]
 
-public class DisplaySlashCommands : RustPlugin
+public class DisplaySlashCommands : CovalencePlugin
 {
     #region Plugin Setup
 
-    private PluginConfiguration PluginConfig;
-    private CuiElementContainer ElementContainer;
+    private PluginConfiguration _config;
+    private CuiElementContainer _elementContainer;
 
     private const string MAIN_LAYER_IDENTIFIER = "displayslashcommands.ui.main";
     private const string HEADER_LAYER_IDENTIFIER = "displayslashcommands.ui.header";
@@ -133,15 +133,15 @@ public class DisplaySlashCommands : RustPlugin
         public string Description { get; set; }
     }
 
-    protected override void SaveConfig() => Config.WriteObject(PluginConfig, true);
-    protected override void LoadDefaultConfig() => PluginConfig = PluginConfiguration.GetDefaultConfig();
+    protected override void SaveConfig() => Config.WriteObject(_config);
+    protected override void LoadDefaultConfig() => _config = PluginConfiguration.GetDefaultConfig();
 
     protected override void LoadConfig()
     {
         base.LoadConfig();
         try
         {
-            PluginConfig = Config.ReadObject<PluginConfiguration>();
+            _config = Config.ReadObject<PluginConfiguration>();
         }
         catch (Exception e)
         {
@@ -171,24 +171,24 @@ public class DisplaySlashCommands : RustPlugin
         if (!permission.PermissionExists(PERMISSION_NAME))
             permission.RegisterPermission(PERMISSION_NAME, this);
 
-        ElementContainer = InitializeElementContainer();
-        GenerateUi(ref ElementContainer);
+        _elementContainer = InitializeElementContainer();
+        GenerateUi(ref _elementContainer);
 
-        PrintWarning(ElementContainer == null
+        PrintWarning(_elementContainer == null
         ? "ElementContainer is null!"
         : "ElementContainer successfully initialized!");
 
-        PrintWarning(ElementContainer.Count == 0
+        PrintWarning(_elementContainer.Count == 0
         ? "ElementContainer is empty!"
-        : $"ElementContainer has {ElementContainer.Count} elements");
+        : $"ElementContainer has {_elementContainer.Count} elements");
 
     }
 
     #endregion
 
-    #region Internal Commands
+    #region Commands
 
-    [ChatCommand("s"), Permission(PERMISSION_NAME)]
+    [Command("s"), Permission(PERMISSION_NAME)]
     private void ShowSlashCommand(BasePlayer player, string command, string[] args)
     {
         if (player == null)
@@ -197,20 +197,19 @@ public class DisplaySlashCommands : RustPlugin
             return;
         }
 
-        if (ElementContainer == null)
+        if (_elementContainer == null)
         {
             PrintWarning("ShowUI: ElementContainer is null!");
             return;
         }
 
-        CuiHelper.AddUi(player, ElementContainer);
+        CuiHelper.AddUi(player, _elementContainer);
     }
 
     [ChatCommand("d"), Permission(PERMISSION_NAME)]
     private void DestroySlashCommand(BasePlayer player, string command, string[] args) => CuiHelper.DestroyUi(player, MAIN_LAYER_IDENTIFIER);
 
     #endregion
-
 
     #region Internal Cui Helpers
 

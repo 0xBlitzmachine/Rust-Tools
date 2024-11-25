@@ -223,6 +223,7 @@ public class DisplaySlashCommands : CovalencePlugin
         if (basePlayer == null)
         {
             PrintWarning("ShowUI: BasePlayer IS null!");
+            return;
         }
 
         CuiHelper.AddUi(basePlayer, _elementContainer);
@@ -233,20 +234,21 @@ public class DisplaySlashCommands : CovalencePlugin
     {
         if (player == null)
         {
-            PrintWarning("ShowUI: IPlayer IS null!");
+            PrintWarning("DestroyUI: IPlayer IS null!");
             return;
         }
 
         if (_elementContainer == null)
         {
-            PrintWarning("ShowUI: ElementContainer IS null!");
+            PrintWarning("DestroyUI: ElementContainer IS null!");
             return;
         }
 
         var basePlayer = player.Object as BasePlayer;
         if (basePlayer == null)
         {
-            PrintWarning("ShowUI: BasePlayer IS null!");
+            PrintWarning("DestroyUI: BasePlayer IS null!");
+            return;
         }
 
         CuiHelper.DestroyUi(basePlayer, MAIN_LAYER_IDENTIFIER);

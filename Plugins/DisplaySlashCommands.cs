@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System;
+using System.Collections;
 using Newtonsoft.Json;
 using Oxide.Core.Libraries.Covalence;
 using Oxide.Game.Rust;
@@ -160,10 +161,25 @@ public class DisplaySlashCommands : CovalencePlugin
 
     private void Unload()
     {
-        foreach (BasePlayer basePlayer in BasePlayer.activePlayerList)
+        var count = 0;
+        var onlinePlayers = players.Connected.GetEnumerator();
+
+        while (onlinePlayers.MoveNext())
         {
-            CuiHelper.DestroyUi(basePlayer, HEADER_LAYER_IDENTIFIER);
+            var currentPlayer = onlinePlayers.Current;
+            if (currentPlayer == null)
+                continue;
+
+            var player = currentPlayer.Object as BasePlayer;
+            if (player == null)
+                continue;
+
+            count++;
+            CuiHelper.DestroyUi(player, MAIN_LAYER_IDENTIFIER);
         }
+
+        onlinePlayers.Dispose();
+        PrintWarning(string.Format("Tried destroying UI for {0} {1}", count, count > 1 ? "players" : "player"));
     }
 
     private void Init()
@@ -189,25 +205,52 @@ public class DisplaySlashCommands : CovalencePlugin
     #region Commands
 
     [Command("s"), Permission(PERMISSION_NAME)]
-    private void ShowSlashCommand(BasePlayer player, string command, string[] args)
+    private void ShowSlashCommand(IPlayer player, string command, string[] args)
     {
         if (player == null)
         {
-            PrintWarning("ShowUI: Player was null!");
+            PrintWarning("ShowUI: IPlayer IS null!");
             return;
         }
 
         if (_elementContainer == null)
         {
-            PrintWarning("ShowUI: ElementContainer is null!");
+            PrintWarning("ShowUI: ElementContainer IS null!");
             return;
         }
 
-        CuiHelper.AddUi(player, _elementContainer);
+        var basePlayer = player.Object as BasePlayer;
+        if (basePlayer == null)
+        {
+            PrintWarning("ShowUI: BasePlayer IS null!");
+        }
+
+        CuiHelper.AddUi(basePlayer, _elementContainer);
     }
 
-    [ChatCommand("d"), Permission(PERMISSION_NAME)]
-    private void DestroySlashCommand(BasePlayer player, string command, string[] args) => CuiHelper.DestroyUi(player, MAIN_LAYER_IDENTIFIER);
+    [Command("d"), Permission(PERMISSION_NAME)]
+    private void DestroySlashCommand(IPlayer player, string command, string[] args)
+    {
+        if (player == null)
+        {
+            PrintWarning("ShowUI: IPlayer IS null!");
+            return;
+        }
+
+        if (_elementContainer == null)
+        {
+            PrintWarning("ShowUI: ElementContainer IS null!");
+            return;
+        }
+
+        var basePlayer = player.Object as BasePlayer;
+        if (basePlayer == null)
+        {
+            PrintWarning("ShowUI: BasePlayer IS null!");
+        }
+
+        CuiHelper.DestroyUi(basePlayer, MAIN_LAYER_IDENTIFIER);
+    }
 
     #endregion
 
@@ -225,6 +268,7 @@ public class DisplaySlashCommands : CovalencePlugin
                 {
                     Color = "0 0 0 0",
                     FadeIn = 2f,
+                    Sprite = "assets/content/textures/generic/fulltransparent.tga"
                 },
                 RectTransform = { AnchorMin = "0.4 0.4", AnchorMax = "0.6 0.6" }
             },
@@ -236,22 +280,22 @@ public class DisplaySlashCommands : CovalencePlugin
     {
         var header = new CuiPanel
         {
-            FadeOut = 2f,
+            FadeOut = 1f,
             Image =
             {
-                Color = "1 5 5 1",
-                FadeIn = 2f,
+                Color = "0 0 1 1",
+                FadeIn = 1f,
             },
             RectTransform = { AnchorMin = "0.0 0.0", AnchorMax = "0.3 1.0" }
         };
 
         var body = new CuiPanel
         {
-            FadeOut = 2f,
+            FadeOut = 1f,
             Image =
             {
-                Color = "255 255 255 1",
-                FadeIn = 2f,
+                Color = "0 1 0 1",
+                FadeIn = 1f
             },
             RectTransform = { AnchorMin = "0.3 0.0", AnchorMax = "1.0 1.0" }
         };
@@ -262,8 +306,9 @@ public class DisplaySlashCommands : CovalencePlugin
             Button =
             {
                 Color = "1 0 0 1",
-                Close = MAIN_LAYER_IDENTIFIER,
+                // Close = MAIN_LAYER_IDENTIFIER,
                 ImageType = Image.Type.Filled,
+                Command = "d"
             },
             Text =
             {

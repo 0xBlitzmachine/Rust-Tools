@@ -1,15 +1,13 @@
-using System.Collections.Generic;
-using System.Text;
 using System;
+using System.Text;
 using System.Collections;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Oxide.Core.Libraries.Covalence;
-using Oxide.Game.Rust;
 using Oxide.Game.Rust.Cui;
 using UnityEngine;
 using UnityEngine.UI;
-using System.ComponentModel;
-using Facepunch.Models.Database;
+using System.Globalization;
 
 namespace Oxide.Plugins;
 
@@ -268,11 +266,11 @@ public class DisplaySlashCommands : CovalencePlugin
                 FadeOut = 2f,
                 Image =
                 {
-                    Color = "0 0 0 0",
+                    Color = "0 0 1 1",
                     FadeIn = 2f,
-                    Sprite = "assets/content/textures/generic/fulltransparent.tga"
+                   // Sprite = "assets/content/textures/generic/fulltransparent.tga"
                 },
-                RectTransform = { AnchorMin = "0.4 0.4", AnchorMax = "0.6 0.6" }
+                RectTransform = { AnchorMin = "0.2 0.2", AnchorMax = "0.8 0.8" }
             },
             "Overlay", MAIN_LAYER_IDENTIFIER
         }
@@ -285,10 +283,10 @@ public class DisplaySlashCommands : CovalencePlugin
             FadeOut = 1f,
             Image =
             {
-                Color = "0 0 1 1",
+                Color = HexToCuiColor("#f50202"),
                 FadeIn = 1f,
             },
-            RectTransform = { AnchorMin = "0.0 0.0", AnchorMax = "0.3 1.0" }
+            RectTransform = { AnchorMin = "0.0 0.7", AnchorMax = "1.0 1.0" }
         };
 
         var body = new CuiPanel
@@ -296,10 +294,10 @@ public class DisplaySlashCommands : CovalencePlugin
             FadeOut = 1f,
             Image =
             {
-                Color = "0 1 0 1",
+                Color = HexToCuiColor("#022ff5"),
                 FadeIn = 1f
             },
-            RectTransform = { AnchorMin = "0.3 0.0", AnchorMax = "1.0 1.0" }
+            RectTransform = { AnchorMin = "0.0 0.0", AnchorMax = "1.0 0.7" }
         };
 
         var closeButton = new CuiButton
@@ -307,7 +305,7 @@ public class DisplaySlashCommands : CovalencePlugin
             FadeOut = 2f,
             Button =
             {
-                Color = "1 0 0 1",
+                Color = HexToCuiColor("#827474"),
                 // Close = MAIN_LAYER_IDENTIFIER,
                 ImageType = Image.Type.Filled,
                 Command = "d"
@@ -320,12 +318,28 @@ public class DisplaySlashCommands : CovalencePlugin
                 FadeIn = 2f,
                 Align = TextAnchor.MiddleCenter,
             },
-            RectTransform = { AnchorMin = "0.0 0.9", AnchorMax = "0.05 1.0" }
+            RectTransform = { AnchorMin = "0.95 0.95", AnchorMax = "1.0 1.0" }
         };
 
-        container.Add(header, MAIN_LAYER_IDENTIFIER);
-        container.Add(body, MAIN_LAYER_IDENTIFIER);
+        container.Add(header, MAIN_LAYER_IDENTIFIER, HEADER_LAYER_IDENTIFIER);
+        container.Add(body, MAIN_LAYER_IDENTIFIER, BODY_LAYER_IDENTIFIER);
         container.Add(closeButton, MAIN_LAYER_IDENTIFIER);
+    }
+    #endregion
+
+    #region Internal Helpers
+    // Thanks to Mevent - ActiveSort
+    private static string HexToCuiColor(string hex, float alpha = 100)
+    {
+        if (string.IsNullOrEmpty(hex)) hex = "#FFFFFF";
+
+        var str = hex.Trim('#');
+        if (str.Length != 6) throw new Exception(hex);
+        var r = byte.Parse(str.Substring(0, 2), NumberStyles.HexNumber);
+        var g = byte.Parse(str.Substring(2, 2), NumberStyles.HexNumber);
+        var b = byte.Parse(str.Substring(4, 2), NumberStyles.HexNumber);
+
+        return $"{(double)r / 255} {(double)g / 255} {(double)b / 255} {alpha / 100f}";
     }
     #endregion
 }

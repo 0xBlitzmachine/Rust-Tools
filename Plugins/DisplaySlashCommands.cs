@@ -33,7 +33,6 @@ public class DisplaySlashCommands : CovalencePlugin
 
     private class PluginConfiguration
     {
-
         [JsonProperty(propertyName: "Sequence of External Plugins")]
         public IEnumerable<ExternalPlugin> SeqOfExternalPlugins { get; set; }
 
@@ -134,7 +133,6 @@ public class DisplaySlashCommands : CovalencePlugin
 
     protected override void SaveConfig() => Config.WriteObject(_config);
     protected override void LoadDefaultConfig() => _config = PluginConfiguration.GetDefaultConfig();
-
     protected override void LoadConfig()
     {
         base.LoadConfig();
@@ -172,12 +170,17 @@ public class DisplaySlashCommands : CovalencePlugin
             if (player == null)
                 continue;
 
-            count++;
-            CuiHelper.DestroyUi(player, MAIN_LAYER_IDENTIFIER);
+            if (!player.IsConnected)
+                continue;
+
+            if (CuiHelper.DestroyUi(player, MAIN_LAYER_IDENTIFIER))
+                count++;
         }
 
         onlinePlayers.Dispose();
-        PrintWarning(string.Format("Tried destroying UI for {0} {1}", count, count > 1 ? "players" : "player"));
+
+        if (count > 0)
+            PrintWarning(string.Format("Tried destroying UI for {0} {1}", count, count > 1 ? "players" : "player"));
     }
 
     private void Init()
@@ -263,13 +266,6 @@ public class DisplaySlashCommands : CovalencePlugin
             new CuiPanel
             {
                 CursorEnabled = true,
-                FadeOut = 2f,
-                Image =
-                {
-                    Color = "0 0 1 1",
-                    FadeIn = 2f,
-                   // Sprite = "assets/content/textures/generic/fulltransparent.tga"
-                },
                 RectTransform = { AnchorMin = "0.2 0.2", AnchorMax = "0.8 0.8" }
             },
             "Overlay", MAIN_LAYER_IDENTIFIER
@@ -280,42 +276,29 @@ public class DisplaySlashCommands : CovalencePlugin
     {
         var header = new CuiPanel
         {
-            FadeOut = 1f,
-            Image =
-            {
-                Color = HexToCuiColor("#f50202"),
-                FadeIn = 1f,
-            },
+            Image = { Color = HexToCuiColor("#1a1a1a", 70), FadeIn = 1f },
             RectTransform = { AnchorMin = "0.0 0.7", AnchorMax = "1.0 1.0" }
         };
 
         var body = new CuiPanel
         {
-            FadeOut = 1f,
-            Image =
-            {
-                Color = HexToCuiColor("#022ff5"),
-                FadeIn = 1f
-            },
+            Image = { Color = HexToCuiColor("#262626", 70), FadeIn = 1f },
             RectTransform = { AnchorMin = "0.0 0.0", AnchorMax = "1.0 0.7" }
         };
 
         var closeButton = new CuiButton
         {
-            FadeOut = 2f,
             Button =
             {
                 Color = HexToCuiColor("#827474"),
-                // Close = MAIN_LAYER_IDENTIFIER,
-                ImageType = Image.Type.Filled,
-                Command = "d"
+                Close = MAIN_LAYER_IDENTIFIER,
             },
             Text =
             {
                 Color = "0 0 0 1",
                 Text = "X",
                 FontSize = 10,
-                FadeIn = 2f,
+                FadeIn = 1f,
                 Align = TextAnchor.MiddleCenter,
             },
             RectTransform = { AnchorMin = "0.95 0.95", AnchorMax = "1.0 1.0" }
@@ -325,9 +308,7 @@ public class DisplaySlashCommands : CovalencePlugin
         container.Add(body, MAIN_LAYER_IDENTIFIER, BODY_LAYER_IDENTIFIER);
         container.Add(closeButton, MAIN_LAYER_IDENTIFIER);
     }
-    #endregion
 
-    #region Internal Helpers
     // Thanks to Mevent - ActiveSort
     private static string HexToCuiColor(string hex, float alpha = 100)
     {

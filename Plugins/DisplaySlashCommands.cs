@@ -266,6 +266,7 @@ public class DisplaySlashCommands : CovalencePlugin
             new CuiPanel
             {
                 CursorEnabled = true,
+                Image = { Sprite = "assets/content/textures/generic/fulltransparent.tga" },
                 RectTransform = { AnchorMin = "0.2 0.2", AnchorMax = "0.8 0.8" }
             },
             "Overlay", MAIN_LAYER_IDENTIFIER
@@ -276,13 +277,13 @@ public class DisplaySlashCommands : CovalencePlugin
     {
         var header = new CuiPanel
         {
-            Image = { Color = HexToCuiColor("#1a1a1a", 70), FadeIn = 1f },
+            Image = { Color = HexToCuiColor("#1a1a1a", 99f), FadeIn = 0.5f },
             RectTransform = { AnchorMin = "0.0 0.7", AnchorMax = "1.0 1.0" }
         };
 
         var body = new CuiPanel
         {
-            Image = { Color = HexToCuiColor("#262626", 70), FadeIn = 1f },
+            Image = { Color = HexToCuiColor("#262626", 99f), FadeIn = 0.5f },
             RectTransform = { AnchorMin = "0.0 0.0", AnchorMax = "1.0 0.7" }
         };
 
@@ -290,8 +291,9 @@ public class DisplaySlashCommands : CovalencePlugin
         {
             Button =
             {
-                Color = HexToCuiColor("#827474"),
+                Color = HexToCuiColor("#853e3e"),
                 Close = MAIN_LAYER_IDENTIFIER,
+                FadeIn = 1f
             },
             Text =
             {
@@ -301,7 +303,7 @@ public class DisplaySlashCommands : CovalencePlugin
                 FadeIn = 1f,
                 Align = TextAnchor.MiddleCenter,
             },
-            RectTransform = { AnchorMin = "0.95 0.95", AnchorMax = "1.0 1.0" }
+            RectTransform = { AnchorMin = "0.975 0.95", AnchorMax = "1.0 1.0" }
         };
 
         container.Add(header, MAIN_LAYER_IDENTIFIER, HEADER_LAYER_IDENTIFIER);

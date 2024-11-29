@@ -19,11 +19,13 @@ public class DisplaySlashCommands : CovalencePlugin
     #region Plugin Setup
 
     private PluginConfiguration _config;
-    private CuiElementContainer _elementContainer;
+    private CuiElementContainer? _elementContainer;
 
     private const string MAIN_LAYER_IDENTIFIER = "displayslashcommands.ui.main";
     private const string HEADER_LAYER_IDENTIFIER = "displayslashcommands.ui.header";
     private const string BODY_LAYER_IDENTIFIER = "displayslashcommands.ui.body";
+    private const string BODYCOMMANDS_LAYER_IDENTIFIER = "displayslashcommands.ui.body.commands";
+    private const string BODYCONTENT_LAYER_IDENTIFIER = "displayslashcommands.ui.body.content";
 
     private const string PERMISSION_NAME = "displayslashcommands.use";
 
@@ -157,6 +159,7 @@ public class DisplaySlashCommands : CovalencePlugin
 
     private void Unload()
     {
+#if RUST
         var count = 0;
         var onlinePlayers = players.Connected.GetEnumerator();
 
@@ -178,9 +181,13 @@ public class DisplaySlashCommands : CovalencePlugin
         }
 
         onlinePlayers.Dispose();
-
+#if DEBUG
         if (count > 0)
             PrintWarning(string.Format("Tried destroying UI for {0} {1}", count, count > 1 ? "players" : "player"));
+#endif
+#endif
+
+
     }
 
     private void Init()
@@ -188,9 +195,13 @@ public class DisplaySlashCommands : CovalencePlugin
         if (!permission.PermissionExists(PERMISSION_NAME))
             permission.RegisterPermission(PERMISSION_NAME, this);
 
+#if RUST
         _elementContainer = InitializeElementContainer();
-        GenerateUi(ref _elementContainer);
+        if (_elementContainer is not null)
+            GenerateUiContainer(ref _elementContainer);
+#endif
 
+#if DEBUG
         PrintWarning(_elementContainer == null
         ? "ElementContainer is null!"
         : "ElementContainer successfully initialized!");
@@ -198,7 +209,7 @@ public class DisplaySlashCommands : CovalencePlugin
         PrintWarning(_elementContainer.Count == 0
         ? "ElementContainer is empty!"
         : $"ElementContainer has {_elementContainer.Count} elements");
-
+#endif
     }
 
     #endregion
@@ -260,21 +271,40 @@ public class DisplaySlashCommands : CovalencePlugin
     #region Internal Cui Helpers
 
     // RawImageSprite: "assets/content/textures/generic/fulltransparent.tga"
-    private static CuiElementContainer InitializeElementContainer() => new()
+    private CuiElementContainer InitializeElementContainer()
     {
+        try
         {
-            new CuiPanel
+            return new()
             {
-                CursorEnabled = true,
-                Image = { Sprite = "assets/content/textures/generic/fulltransparent.tga" },
-                RectTransform = { AnchorMin = "0.2 0.2", AnchorMax = "0.8 0.8" }
-            },
-            "Overlay", MAIN_LAYER_IDENTIFIER
+                {
+                    new CuiPanel
+                    {
+                        CursorEnabled = true,
+                        Image = { Sprite = "assets/content/textures/generic/fulltransparent.tga" },
+                        RectTransform = { AnchorMin = "0.2 0.2", AnchorMax = "0.8 0.8" }
+                    },
+                    "Overlay", MAIN_LAYER_IDENTIFIER
+                }
+            };
         }
-    };
+        catch (Exception e)
+        {
+            var builder = new StringBuilder("Failed to initialize UI Container (Wrong Component Usage?)");
+            builder.AppendLine(e.Message);
 
-    private static void GenerateUi(ref CuiElementContainer container)
+            PrintWarning(builder.ToString());
+#if DEBUG
+            LogWarning(builder.ToString());
+#endif
+            return null;
+        }
+    }
+
+    private void GenerateUiContainer(ref CuiElementContainer container)
     {
+        try
+        {
         var header = new CuiPanel
         {
             Image = { Color = HexToCuiColor("#1a1a1a", 99f), FadeIn = 0.5f },
@@ -309,8 +339,82 @@ public class DisplaySlashCommands : CovalencePlugin
         container.Add(header, MAIN_LAYER_IDENTIFIER, HEADER_LAYER_IDENTIFIER);
         container.Add(body, MAIN_LAYER_IDENTIFIER, BODY_LAYER_IDENTIFIER);
         container.Add(closeButton, MAIN_LAYER_IDENTIFIER);
+
+        }
+        catch (Exception e)
+        {
+            var builder = new StringBuilder("Failed to generate UI Elements (Wrong Component Usage?)");
+            builder.AppendLine(e.Message);
+
+            PrintWarning(builder.ToString());
+#if DEBUG
+            LogWarning(builder.ToString());
+#endif
+        }
     }
 
+    private void GenerateBodyContent(ref CuiElementContainer container)
+    {
+        try
+        {
+            var bodyPlugin = new CuiElement()
+            {
+                Name = BODYCOMMANDS_LAYER_IDENTIFIER,
+                Parent = BODY_LAYER_IDENTIFIER,
+                Components =
+                {
+                    {
+                        new CuiScrollViewComponent()
+                        {
+                            ContentTransform = { AnchorMin = "0.0 0.0", AnchorMax = "0.30 1.0"},
+                            MovementType = ScrollRect.MovementType.Elastic,
+                            Vertical = true,
+                            VerticalScrollbar =
+                            {
+                              AutoHide = true,
+                              TrackColor = HexToCuiColor("#4287f5"),
+                              HandleColor = HexToCuiColor("#7842f5"),
+                              HighlightColor = HexToCuiColor("#bcf542"),
+                              PressedColor = HexToCuiColor("#f5a742")
+                            }
+                        }
+                    }
+                }
+            };
+            container.Add(bodyPlugin);
+
+            var plugins = _config.SeqOfExternalPlugins.GetEnumerator();
+            int count = 0;
+
+            while (plugins.MoveNext())
+            {
+                var plugin = plugins.Current;
+                count++;
+
+                var bodyPluginContent = new CuiButton()
+                {
+                    Button =
+                    {
+                        Color = HexToCuiColor(null),
+                        // Execute displaying all included commands in plugin
+                        // BODYCONTENT_LAYER_IDENTIFIER -> Add new ScrollView with Elements
+                        // Command could be "uidraw {BODYCONTENT_IDENTIFIER}.{count}"
+                        // Command = ""
+                    }
+                };
+            }
+        }
+        catch (Exception e)
+        {
+            var builder = new StringBuilder("Failed to generate Body Content (Wrong Component Usage?)");
+            builder.AppendLine(e.Message);
+
+            PrintWarning(builder.ToString());
+#if DEBUG
+            LogWarning(builder.ToString());
+#endif
+        }
+    }
     // Thanks to Mevent - ActiveSort
     private static string HexToCuiColor(string hex, float alpha = 100)
     {

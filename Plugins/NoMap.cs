@@ -109,10 +109,7 @@ public class NoMap : RustPlugin
 
         foreach (BasePlayer player in players)
         {
-            if (player is null)
-                continue;
-
-            if (!player.IsConnected)
+            if (!IsPlayerOnline(player))
                 continue;
 
             CuiHelper.DestroyUi(player, CONTAINER_IDENTIFIER);
@@ -144,7 +141,13 @@ public class NoMap : RustPlugin
 
     #region Internal Helpers
 
-    private static bool IsPlayerOnline(BasePlayer player) => player != null && player.IsConnected;
+    private static bool IsPlayerOnline(BasePlayer player)
+    {
+        if (player == null)
+            return false;
+
+        return player.IsConnected;
+    }
     private void RefreshMapInterfaceUsage(BasePlayer player)
     {
         if (IsPlayerOnline(player))

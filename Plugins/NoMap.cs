@@ -126,10 +126,6 @@ public class NoMap : RustPlugin
             return;
 
         var player = BasePlayer.FindByID(ulong.Parse(id));
-
-        if (!IsPlayerOnline(player))
-            return;
-
         RefreshMapInterfaceUsage(player);
     }
 

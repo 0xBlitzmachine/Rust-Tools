@@ -118,24 +118,28 @@ public class NoMap : RustPlugin
 
     private void OnUserPermissionGranted(string id, string permName)
     {
-        if (permName.Equals(PERMISSION_NAME))
-        {
-            var player = BasePlayer.FindByID(ulong.Parse(id));
+        if (!permName.Equals(PERMISSION_NAME))
+            return;
 
-            if (IsPlayerOnline(player))
-                CuiHelper.AddUi(player, _elementContainer);
-        }
+        var player = BasePlayer.FindByID(ulong.Parse(id));
+
+        if (!IsPlayerOnline(player))
+            return;
+
+        CuiHelper.AddUi(player, _elementContainer);
     }
 
-    void OnUserPermissionRevoked(string id, string permName)
+    private void OnUserPermissionRevoked(string id, string permName)
     {
-        if (permName.Equals(PERMISSION_NAME))
-        {
-            var player = BasePlayer.FindByID(ulong.Parse(id));
+        if (!permName.Equals(PERMISSION_NAME))
+            return;
 
-            if (IsPlayerOnline(player))
-                CuiHelper.DestroyUi(player, CONTAINER_IDENTIFIER);
-        }
+        var player = BasePlayer.FindByID(ulong.Parse(id));
+
+        if (!IsPlayerOnline(player))
+            return;
+
+        CuiHelper.DestroyUi(player, CONTAINER_IDENTIFIER);
     }
     #endregion
 
@@ -150,13 +154,13 @@ public class NoMap : RustPlugin
     }
     private void RefreshMapInterfaceUsage(BasePlayer player)
     {
-        if (IsPlayerOnline(player))
-        {
-            if (permission.UserHasPermission(player.UserIDString, PERMISSION_NAME))
-                CuiHelper.AddUi(player, _elementContainer);
-            else
-                CuiHelper.DestroyUi(player, CONTAINER_IDENTIFIER);
-        }
+        if (!IsPlayerOnline(player))
+            return;
+
+        if (permission.UserHasPermission(player.UserIDString, PERMISSION_NAME))
+            CuiHelper.AddUi(player, _elementContainer);
+        else
+            CuiHelper.DestroyUi(player, CONTAINER_IDENTIFIER);
     }
 
     #endregion

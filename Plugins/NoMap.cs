@@ -147,16 +147,13 @@ public class NoMap : RustPlugin
     private static bool IsPlayerOnline(BasePlayer player) => player != null && player.IsConnected;
     private void RefreshMapInterfaceUsage(BasePlayer player)
     {
-        if (player is null)
-            return;
-
-        if (!player.IsConnected)
-            return;
-
-        if (permission.UserHasPermission(player.UserIDString, PERMISSION_NAME))
-            CuiHelper.AddUi(player, _elementContainer);
-        else
-            CuiHelper.DestroyUi(player, CONTAINER_IDENTIFIER);
+        if (IsPlayerOnline(player))
+        {
+            if (permission.UserHasPermission(player.UserIDString, PERMISSION_NAME))
+                CuiHelper.AddUi(player, _elementContainer);
+            else
+                CuiHelper.DestroyUi(player, CONTAINER_IDENTIFIER);
+        }
     }
 
     #endregion

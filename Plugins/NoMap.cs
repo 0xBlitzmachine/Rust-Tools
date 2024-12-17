@@ -125,6 +125,11 @@ public class NoMap : RustPlugin
     [ConsoleCommand("nomap.refresh")]
     private void CmdRefreshMapInterface(ConsoleSystem.Arg arg)
     {
+        var argPlayer = arg.Player();
+
+        if (argPlayer != null && !permission.UserHasPermission(argPlayer.UserIDString, PERMISSION_NAME))
+            return;
+
         var players = BasePlayer.activePlayerList;
 
         if (players.Count == 0)
@@ -134,7 +139,7 @@ public class NoMap : RustPlugin
 
         foreach (BasePlayer player in players)
         {
-          RefreshMapInterfaceUsage(player);
+            RefreshMapInterfaceUsage(player);
         }
 
         Puts("Done!");

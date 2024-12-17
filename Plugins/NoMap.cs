@@ -142,6 +142,50 @@ public class NoMap : RustPlugin
 
         CuiHelper.DestroyUi(player, CONTAINER_IDENTIFIER);
     }
+
+    private void OnGroupPermissionGranted(string name, string perm)
+    {
+        if (!perm.Equals(PERMISSION_NAME))
+            return;
+
+        var players = BasePlayer.activePlayerList;
+        foreach (BasePlayer player in players)
+        {
+            RefreshMapInterfaceUsage(player);
+        }
+    }
+
+    private void OnGroupPermissionRevoked(string name, string perm)
+    {
+        if (!perm.Equals(PERMISSION_NAME))
+            return;
+
+        var players = BasePlayer.activePlayerList;
+        foreach (BasePlayer player in players)
+        {
+            RefreshMapInterfaceUsage(player);
+        }
+    }
+
+    private void OnUserGroupRemoved(string id)
+    {
+        var player = BasePlayer.FindByID(ulong.Parse(id));
+
+        if (!IsPlayerOnline(player))
+            return;
+
+        RefreshMapInterfaceUsage(player);
+    }
+
+    private void OnUserGroupAdded(string id)
+    {
+        var player = BasePlayer.FindByID(ulong.Parse(id));
+
+        if (!IsPlayerOnline(player))
+            return;
+
+        RefreshMapInterfaceUsage(player);
+    }
     #endregion
 
     #region Internal Helpers

@@ -4,6 +4,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Oxide.Game.Rust.Cui;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Oxide.Plugins;
 
@@ -200,8 +201,23 @@ public class NoMap : RustPlugin
                 }
             };
 
+            var image = new CuiElement
+            {
+                Parent = CONTAINER_IDENTIFIER,
+                Components =
+                {
+                    new CuiImageComponent
+                    {
+                        ImageType = Image.Type.Filled,
+                        ItemId = 696029452
+                    },
+                    new CuiRectTransformComponent { AnchorMin = "0.45 0.6", AnchorMax = "0.55 0.7" }
+                }
+            };
+
             container.Add(panel, "Map", CONTAINER_IDENTIFIER);
             container.Add(element);
+            container.Add(image);
         }
         catch (Exception e)
         {

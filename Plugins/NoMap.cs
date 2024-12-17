@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using Newtonsoft.Json;
@@ -18,6 +19,7 @@ public class NoMap : RustPlugin
     private Configuration _config;
     private const string CONTAINER_IDENTIFIER = "nomap.ui.container";
     private const string PERMISSION_NAME = "nomap.use";
+    private HashSet<string> _blockedPlayers = new HashSet<string>();
 
     #endregion
 
@@ -115,6 +117,7 @@ public class NoMap : RustPlugin
 
             CuiHelper.DestroyUi(player, CONTAINER_IDENTIFIER);
         }
+        _blockedPlayers.Clear();
     }
 
     private void OnUserPermissionGranted(string id, string permName)
@@ -127,7 +130,7 @@ public class NoMap : RustPlugin
         if (!IsPlayerOnline(player))
             return;
 
-        CuiHelper.AddUi(player, _elementContainer);
+        RefreshMapInterfaceUsage(player);
     }
 
     private void OnUserPermissionRevoked(string id, string permName)
@@ -136,11 +139,7 @@ public class NoMap : RustPlugin
             return;
 
         var player = BasePlayer.FindByID(ulong.Parse(id));
-
-        if (!IsPlayerOnline(player))
-            return;
-
-        CuiHelper.DestroyUi(player, CONTAINER_IDENTIFIER);
+        RefreshMapInterfaceUsage(player);
     }
 
     private void OnGroupPermissionGranted(string name, string perm)
@@ -170,20 +169,12 @@ public class NoMap : RustPlugin
     private void OnUserGroupRemoved(string id)
     {
         var player = BasePlayer.FindByID(ulong.Parse(id));
-
-        if (!IsPlayerOnline(player))
-            return;
-
         RefreshMapInterfaceUsage(player);
     }
 
     private void OnUserGroupAdded(string id)
     {
         var player = BasePlayer.FindByID(ulong.Parse(id));
-
-        if (!IsPlayerOnline(player))
-            return;
-
         RefreshMapInterfaceUsage(player);
     }
     #endregion
@@ -203,9 +194,18 @@ public class NoMap : RustPlugin
             return;
 
         if (permission.UserHasPermission(player.UserIDString, PERMISSION_NAME))
-            CuiHelper.AddUi(player, _elementContainer);
+        {
+            if (!_blockedPlayers.Contains(player.UserIDString))
+            {
+                _blockedPlayers.Add(player.UserIDString);
+                CuiHelper.AddUi(player, _elementContainer);
+            }
+        }
         else
+        {
+            _blockedPlayers.Remove(player.UserIDString);
             CuiHelper.DestroyUi(player, CONTAINER_IDENTIFIER);
+        }
     }
 
     #endregion

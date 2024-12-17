@@ -125,9 +125,8 @@ public class NoMap : RustPlugin
         {
             var player = BasePlayer.FindByID(ulong.Parse(id));
 
-            if (player != null)
-                if (player.IsConnected)
-                    CuiHelper.AddUi(player, _elementContainer);
+            if (IsPlayerOnline(player))
+                CuiHelper.AddUi(player, _elementContainer);
         }
     }
 
@@ -137,15 +136,15 @@ public class NoMap : RustPlugin
         {
             var player = BasePlayer.FindByID(ulong.Parse(id));
 
-            if (player != null)
-                if (player.IsConnected)
-                    CuiHelper.DestroyUi(player, CONTAINER_IDENTIFIER);
+            if (IsPlayerOnline(player))
+                CuiHelper.DestroyUi(player, CONTAINER_IDENTIFIER);
         }
     }
     #endregion
 
     #region Internal Helpers
 
+    private static bool IsPlayerOnline(BasePlayer player) => player != null && player.IsConnected;
     private void RefreshMapInterfaceUsage(BasePlayer player)
     {
         if (player is null)

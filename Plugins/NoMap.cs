@@ -118,33 +118,30 @@ public class NoMap : RustPlugin
             CuiHelper.DestroyUi(player, CONTAINER_IDENTIFIER);
         }
     }
-    #endregion
 
-    #region Oxide Commands
-
-    [ConsoleCommand("nomap.refresh")]
-    private void CmdRefreshMapInterface(ConsoleSystem.Arg arg)
+    private void OnUserPermissionGranted(string id, string permName)
     {
-        var argPlayer = arg.Player();
-
-        if (argPlayer != null && !permission.UserHasPermission(argPlayer.UserIDString, PERMISSION_NAME))
-            return;
-
-        var players = BasePlayer.activePlayerList;
-
-        if (players.Count == 0)
-            return;
-
-        Puts("Refreshing ...");
-
-        foreach (BasePlayer player in players)
+        if (permName.Equals(PERMISSION_NAME))
         {
-            RefreshMapInterfaceUsage(player);
-        }
+            var player = BasePlayer.FindByID(ulong.Parse(id));
 
-        Puts("Done!");
+            if (player != null)
+                if (player.IsConnected)
+                    CuiHelper.AddUi(player, _elementContainer);
+        }
     }
 
+    void OnUserPermissionRevoked(string id, string permName)
+    {
+        if (permName.Equals(PERMISSION_NAME))
+        {
+            var player = BasePlayer.FindByID(ulong.Parse(id));
+
+            if (player != null)
+                if (player.IsConnected)
+                    CuiHelper.DestroyUi(player, CONTAINER_IDENTIFIER);
+        }
+    }
     #endregion
 
     #region Internal Helpers

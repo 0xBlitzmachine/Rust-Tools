@@ -72,7 +72,7 @@ public class CustomIcon : RustPlugin
 
             PrintError(builder.ToString());
 
-            PrintWarning("Creating default configuration object!");
+            PrintWarning("Initializing default configuration object!");
             LoadDefaultConfig();
         }
     }
